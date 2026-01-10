@@ -4,6 +4,7 @@ import pandas as pd
 Moduł do obliczeń
 '''
 
+
 def calculate_station_monthly_averages(df):
     """
     Oblicza miesięczne średnie wartości PM2.5 dla każdej stacji w każdym roku
@@ -14,14 +15,15 @@ def calculate_station_monthly_averages(df):
     Returns:
         pd.DataFrame: DataFrame z miesięcznymi średnimi wartościami PM2.5.
     """
-    df_result = df.copy()
-    df_result["Rok"] = df["Data"].dt.year
-    df_result["Miesiąc"] = df["Data"].dt.month
-    df_result = df_result.sort_index(axis=1)
+    df_copy = df.copy()
+    months_means = (
+        df_copy.groupby([df_copy["Data"].dt.year, df_copy["Data"].dt.month]).mean(numeric_only=True)
+    )
 
-    month_means = df_result.groupby(["Rok", "Miesiąc"]).mean(numeric_only=True)
-    
-    return month_means
+    # Ustawienie nazw indeksów
+    months_means.index.names = ["Rok", "Miesiąc"]
+
+    return months_means
 
 def calculate_city_monthly_averages(df):
     """
@@ -33,12 +35,13 @@ def calculate_city_monthly_averages(df):
     Returns:
         pd.DataFrame: DataFrame z miesięcznymi średnimi wartościami PM2.5 dla miejscowości.
     """
-    df_result = df.copy()
-    city_month_means = df_result.T.groupby(level=0).mean().T
+    df_copy = df.copy()
+    city_month_means = df_copy.T.groupby(level=0).mean().T
 
     return city_month_means
 
-def calculate_days_exceeding_limit(df):
+
+def calculate_days_exceeding_limit(df, limit=15):
     """
     Oblicza liczbę dni w miesiącu, kiedy średnia dzienna wartość PM2.5 przekracza określony limit.
     
@@ -48,22 +51,18 @@ def calculate_days_exceeding_limit(df):
         df (pd.DataFrame): DataFrame z danymi PM2.5, gdzie kolumny to kody stacji, a indeks to daty.
         limit (float): Limit wartości PM2.5 do sprawdzenia przekroczeń.
     """
-    # Przygotowanie dataframe'u z datami bez czasu
-    df_c = df.copy()
-    df_c['Dzień'] = df_c['Data'].dt.date #dzień, czyli data w formacie rok-miesiąc-dzień
-    df_c = df_c.drop(columns=['Data', 'Rok', 'Miesiąc'], errors='ignore')
 
+    df_copy = df.copy()
     # Obliczanie średnich dziennych stężeń na stacje
-    day_means = df_c.groupby('Dzień').mean(numeric_only=True).reset_index()
+    daily_means = (
+        df_copy.groupby(df_copy["Data"].dt.floor("D")).mean(numeric_only=True)
+    )
 
     # Sprawdzanie ile dni w każdym roku przekroczono 15 µg/m^3 dla każdej stacji
-    day_means = day_means.set_index('Dzień')
-    mask = day_means > 15
-    day_means['Rok'] = pd.to_datetime(day_means.index).year
+    exceeded = daily_means > limit
+    result = exceeded.groupby(exceeded.index.year).sum()
 
-    exceeded_results = mask.groupby(day_means['Rok']).sum()
-
-    return exceeded_results
+    return result
 
 def get_3_lowest_highest(df, year):
     """
