@@ -162,7 +162,7 @@ def correct_dates(dfs):
         print('\n')
 
         changed_df['Data'] = changed_df['Data'].apply(
-                lambda x: x - pd.Timedelta(days=1) if x.time() == pd.Timestamp("00:00:00").time() else x
+                lambda x: x - pd.Timedelta(seconds=1) if x.time() == pd.Timestamp("00:00:00").time() else x
             )
         print(f'Po korekcie daty - rok {year}:')
         print(changed_df['Data'].head(3))
