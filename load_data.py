@@ -3,6 +3,8 @@ import requests
 import zipfile
 import io, os
 import re
+from bs4 import BeautifulSoup
+from io import BytesIO
 
 '''
 Moduł do wczytywania i czyszczenia danych
@@ -43,18 +45,45 @@ def load_pm25_data(years, gios_archive_url, gios_ids, filenames):
     return data_frames
 
 # funkcja do wczytywania metadanych ze wskazanego pliku
-def load_metadata(metadata_path):
-    if not os.path.exists(metadata_path):
-        print(f"Błąd: plik metadanych {metadata_path} nie istnieje.")
-        return pd.DataFrame()
+def load_metadata():
+    """
+    Wyszukuje najnowszy plik metadanych GIOŚ na stronie archiwum,
+    pobiera go i zwraca jako DataFrame.
+    """
     
-    try:
-        metadata_df = pd.read_excel(metadata_path)
-        metadata_df = metadata_df.rename(columns={'Stary Kod stacji \n(o ile inny od aktualnego)': 'Stary Kod stacji'})
-        return metadata_df
-    except Exception as e:
-        print(f"Błąd przy wczytywaniu metadanych: {e}")
+    archive_url = "https://powietrze.gios.gov.pl/pjp/archives"
+
+    r = requests.get(archive_url)
+    r.raise_for_status()
+    soup = BeautifulSoup(r.text, "html.parser")
+
+    # Linki z 'downloadFile/...'
+    links = soup.find_all("a", href=True)
+    candidates = []
+
+    for a in links:
+        href = a["href"]
+        text = a.get_text(strip=True).lower()
+
+        # warunek: tekst zawiera metadane itp.
+        if "meta" in text and "downloadFile" in href:
+            candidates.append((text, href))
+
+    if not candidates:
+        print("Nie znaleziono pliku metadanych!")
         return pd.DataFrame()
+
+    text, href = candidates[0]
+
+    file_url = "https://powietrze.gios.gov.pl" + href
+
+    r = requests.get(file_url)
+    r.raise_for_status()
+
+    df = pd.read_excel(BytesIO(r.content), header=0)
+    df = df.rename(columns={'Stary Kod stacji \n(o ile inny od aktualnego)': 'Stary Kod stacji'})
+    
+    return df
     
 # Funkcja pomocnicza do wyciągania starych kodów stacji z metadanych
 def get_old_station_codes(metadata_df):
