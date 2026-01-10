@@ -119,6 +119,15 @@ def clean_pm25_data(dfs):
         cleaned_df = cleaned_df.rename(columns={'Kod stacji': 'Data'})
         cleaned_df['Data'] = pd.to_datetime(cleaned_df['Data'])
 
+        # Zamiana przecinków na kropki (jeśli plik używa przecinków jako separatora dziesiętnego, np. 2018)
+        cleaned_df = cleaned_df.replace(',', '.', regex=True).infer_objects(copy=False)
+
+        # Konwersja kolumn stacji na typ float
+        for col in cleaned_df.columns:
+            if col != 'Data':
+                cleaned_df[col] = pd.to_numeric(cleaned_df[col], errors='coerce')
+
+
         result_dfs[year] = cleaned_df
 
     return result_dfs
@@ -160,7 +169,11 @@ def correct_dates(dfs):
     result_dfs = {}
     for year, df in dfs.items():
         changed_df = df.copy()
-        mask_midnight = changed_df['Data'].dt.time == pd.Timestamp("00:00:00").time()
+
+
+        cutoff = pd.Timedelta(seconds=59)
+        mask_midnight = changed_df['Data'].dt.time <= (pd.Timestamp("00:00:00") + cutoff).time()
+
         if mask_midnight.any():
             # bierzemy pierwszy
             idx = mask_midnight.idxmax()#bierzemy true
@@ -169,9 +182,7 @@ def correct_dates(dfs):
             example_before = None
 
         # korekta
-        changed_df['Data'] = changed_df['Data'].apply(
-            lambda x: x - pd.Timedelta(seconds=1) if x.time() == pd.Timestamp("00:00:00").time() else x
-        )
+        changed_df.loc[mask_midnight, 'Data'] = (changed_df.loc[mask_midnight, 'Data'].dt.normalize() - pd.Timedelta(seconds=1))
 
         # po korekcie sanity check
         if example_before is not None:
