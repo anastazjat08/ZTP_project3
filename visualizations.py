@@ -65,9 +65,15 @@ def plot_heatmaps(df):
     plt.show()
 
 def plot_exceeding_days(df, title):
+    """Rysuje wykres słupkowy porównujący liczbę dni przekroczeń dla wybranych stacji w różnych latach
+    Args:
+        df (pd.DataFrame): DataFrame z liczbą dni przekroczeń dla każdej stacji i roku.
+        title (str): Tytuł wykresu.
+    """
 
     df_plot = df.T
-    # Rysowanie wykresu słupkowego porównującego liczbę dni przekroczeń dla wybranych stacji w różnych latach
+    # Rysowanie wykresu słupkowego porównującego liczbę dni przekroczeń
+    # dla wybranych stacji w różnych latach
     years = df_plot.columns
     stations = df_plot.index
 

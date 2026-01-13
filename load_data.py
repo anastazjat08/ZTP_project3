@@ -11,8 +11,17 @@ Moduł do wczytywania i czyszczenia danych
 '''
 
 
-# funkcja do ściągania podanego archiwum
 def download_gios_archive(year, gios_archive_url, gios_id, filename):
+    """ Ściąganie podanego archiwum GIOS i wczytanie pliku z danymi PM2.5 do DataFrame
+    Args:
+        year (int): rok
+        gios_archive_url (str): URL do archiwum GIOS
+        gios_id (str): ID archiwum GIOS
+        filename (str): nazwa pliku do pobrania
+
+    Returns:
+        pd.DataFrame: dane PM2.5 dla podanego roku
+    """
     # Pobranie archiwum ZIP do pamięci
     url = f"{gios_archive_url}{gios_id}"
     response = requests.get(url)
@@ -33,8 +42,17 @@ def download_gios_archive(year, gios_archive_url, gios_id, filename):
                     print(f"Błąd przy wczytywaniu {year}: {e}")
     return df
 
-# funkcja do pobierania danych PM2.5 dla podanych lat
+
 def load_pm25_data(years, gios_archive_url, gios_ids, filenames):
+    """ Pobiera dane PM2.5 dla podanych lat z archiwum GIOS
+    Args:
+        years (list): lista lat do pobrania
+        gios_archive_url (str): URL do archiwum GIOS
+        gios_ids (dict): słownik z ID archiwów dla każdego roku
+        filenames (dict): słownik z nazwami plików dla każdego roku
+    Returns:
+        dict: słownik z DataFrame dla każdego roku
+    """
     data_frames = {} # słownik do przechowywania DataFrame dla każdego roku
     for year in years:
         df = download_gios_archive(year, gios_archive_url, gios_ids[year], filenames[year])
@@ -42,11 +60,13 @@ def load_pm25_data(years, gios_archive_url, gios_ids, filenames):
 
     return data_frames
 
-# funkcja do wczytywania metadanych ze wskazanego pliku
+
 def load_metadata():
-    """
-    Wyszukuje najnowszy plik metadanych GIOŚ na stronie archiwum,
-    pobiera go i zwraca jako DataFrame.
+    """ Wyszukuje najnowszy plik metadanych GIOS na stronie archiwum,
+        pobiera go i zwraca jako DataFrame.
+
+    Returns:
+        pd.DataFrame: dane metadanych GIOS
     """
     
     archive_url = "https://powietrze.gios.gov.pl/pjp/archives"
@@ -83,8 +103,17 @@ def load_metadata():
     
     return df
     
-# Funkcja pomocnicza do wyciągania starych kodów stacji z metadanych
+
 def get_old_station_codes(metadata_df):
+    """ Wyciąga stare kody stacji z metadanych
+
+    Args:
+        metadata_df (pd.DataFrame): dane metadanych GIOS
+
+    Returns:
+        tuple: słownik mapujący stare kody stacji na nowe
+        oraz słownik mapujący kody stacji na nazwy miejscowości
+    """
     metadata_filtered = metadata_df[metadata_df["Stary Kod stacji"].notna()]
     old_codes = {}
     for k, row in metadata_filtered.iterrows():
@@ -97,8 +126,16 @@ def get_old_station_codes(metadata_df):
 
     return old_codes, cities
 
-# Funckja do czyszczenia DataFrame z danymi PM2.5
+
 def clean_pm25_data(dfs):
+    """Czyści Dataframe z danymi PM2.5
+
+    Args:
+        dfs (dict): słownik z DataFrame dla każdego roku
+
+    Returns:
+        dict: słownik z oczyszczonymi DataFrame dla każdego roku
+    """
     result_dfs = {}
     for year, df in dfs.items():
         cleaned_df = df.copy()
@@ -132,8 +169,17 @@ def clean_pm25_data(dfs):
 
     return result_dfs
 
-# Funkcja do zamiany starych kodów stacji na nowe w DataFrame
+
 def replace_old_codes(dfs, old_codes):
+    """Zamienia stare kody stacji na nowe w Dataframe
+
+    Args:
+        dfs (dict): słownik z DataFrame dla każdego roku
+        old_codes (dict): słownik mapujący stare kody stacji na nowe
+
+    Returns:
+        dict: słownik z DataFrame z zamienionymi kodami stacji
+    """
     result_dfs = {}
     for year, df in dfs.items():
         changed_df = df.copy()
@@ -164,8 +210,16 @@ def replace_old_codes(dfs, old_codes):
 
     return result_dfs
 
-# Funkcja do korekty dat
+
 def correct_dates(dfs):
+    """Poprawia daty
+
+    Args:
+        dfs (dict): słownik z DataFrame dla każdego roku
+
+    Returns:
+        dict: słownik z DataFrame z poprawionymi datami
+    """
     result_dfs = {}
     for year, df in dfs.items():
         changed_df = df.copy()
@@ -197,8 +251,16 @@ def correct_dates(dfs):
     return result_dfs
 
 
-# Funkcja do łączenia danych z różnych lat w jeden DataFrame
 def merge_dataframes(dfs, cities):
+    """Łączy dane z różnych lat w jeden Dataframe
+
+    Args:
+        dfs (dict): słownik z DataFrame dla każdego roku
+        cities (dict): słownik mapujący kody stacji na nazwy miejscowości
+
+    Returns:
+        dict: słownik z DataFrame z poprawionymi datami
+    """
     merged_df = pd.concat(dfs.values(), axis=0, join='inner', ignore_index=True)
     
     # Zamiana na MultiIndex
@@ -218,21 +280,27 @@ def merge_dataframes(dfs, cities):
 
     return merged_df
 
-# Funkcja do zapisywania DataFrame do pliku Excel
 def save_to_excel(df, output_path):
+    """Zapisuje Dataframe do pliku excel
+
+    Args:
+        df (DataFrame): DataFrame do zapisania
+        output_path (str): ścieżka do pliku wyjściowego
+    """
     try:
         df.to_excel(output_path)
     except Exception as e:
         print(f'Błąd przy zapisywaniu do pliku Excel: {e}')
 
 def get_cities_years(df, cities, years):
-    '''
-    Docstring for get_cities_years
-    
-    :param df: Description
-    :param cities: Description
-    :param years: Description
-    '''
+    """Zwraca Dataframe z danymi dla podanych miast i lat
+    Args:
+        df (pd.DataFrame): DataFrame z danymi PM2.5.
+        cities (list): lista nazw miast do wybrania.
+        years (list): lista lat do wybrania.
+    Returns:
+        pd.DataFrame: DataFrame z danymi dla podanych miast i lat.
+    """
     result_df = df.copy()
     result_df = result_df[cities]
     result_df = result_df.loc[years].reset_index()

@@ -44,12 +44,11 @@ def calculate_city_monthly_averages(df):
 def calculate_days_exceeding_limit(df, limit=15):
     """
     Oblicza liczbę dni w miesiącu, kiedy średnia dzienna wartość PM2.5 przekracza określony limit.
-    
     Args:
         df (pd.DataFrame): DataFrame z danymi PM2.5, gdzie kolumny to kody stacji, a indeks to daty.
-        limit (float): Limit wartości PM2.5 do sprawdzenia przekroczeń.
-        df (pd.DataFrame): DataFrame z danymi PM2.5, gdzie kolumny to kody stacji, a indeks to daty.
-        limit (float): Limit wartości PM2.5 do sprawdzenia przekroczeń.
+        limit (float): Limit przekroczenia PM2.5 w µg/m^3. Domyślnie 15 µg/m^3.
+    Returns:
+        pd.DataFrame: DataFrame z liczbą dni przekroczeń dla każdej stacji i roku.
     """
 
     df_copy = df.copy()
@@ -66,14 +65,14 @@ def calculate_days_exceeding_limit(df, limit=15):
 
 def get_3_lowest_highest(df, year):
     """
-    Znajduje 3 najniższych i 3 najwyższych miesięcznych średnich wartości PM2.5 dla każdej stacji.
+    Znajduje 3 stacje z najmniejszą i 3 stacje z największą liczbą dni z przekroczeniem normy dobowej w danym roku.
     
     Args:
         df (pd.DataFrame): DataFrame z miesięcznymi średnimi wartościami PM2.5.
-        year (int): Rok, dla którego obliczamy wartości.
+        year (int): Rok, dla którego wyznaczamy 3 najniższe i 3 najwyższe wartości.
 
     Returns:
-        df (pd.DataFrame): DataFrame z 3 najniższymi i 3 najwyższymi wartościami PM2.5 dla każdej stacji.
+        df (pd.DataFrame): DataFrame z 3 stacjami o najmniejszej i 3 stacjami o największej liczbie dni przekroczeń w danym roku.
     """
     exceed = df.loc[year].copy()
     smallest3 = exceed.nsmallest(3)
