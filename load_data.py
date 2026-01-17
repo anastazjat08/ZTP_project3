@@ -111,8 +111,11 @@ def get_old_station_codes(metadata_df):
         metadata_df (pd.DataFrame): dane metadanych GIOS
 
     Returns:
-        tuple: słownik mapujący stare kody stacji na nowe
-        oraz słownik mapujący kody stacji na nazwy miejscowości
+        tuple: krotka składająca sie z 3 słowników:
+            1) słownik mapujący stare kody stacji na nowe
+            2) słownik mapujący kody stacji na nazwy miejscowości
+            3) słownik mapujący kody stacji na nazwy wojewódstw
+
     """
     metadata_filtered = metadata_df[metadata_df["Stary Kod stacji"].notna()]
     old_codes = {}
@@ -123,8 +126,8 @@ def get_old_station_codes(metadata_df):
             for code in old.split(','): # w jednej komórce metadanych może być kilka starych kodów rozdzielonych przecinkiem
                 old_codes[code.strip()] = new
     cities = dict(zip(metadata_df["Kod stacji"], metadata_df["Miejscowość"]))
-
-    return old_codes, cities
+    provinces = dict(zip(metadata_df["Kod stacji"], metadata_df["Województwo"]))
+    return old_codes, cities, provinces
 
 
 def clean_pm25_data(dfs):
@@ -251,12 +254,13 @@ def correct_dates(dfs):
     return result_dfs
 
 
-def merge_dataframes(dfs, cities):
+def merge_dataframes(dfs, cities,provinces,):
     """Łączy dane z różnych lat w jeden Dataframe
 
     Args:
         dfs (dict): słownik z DataFrame dla każdego roku
         cities (dict): słownik mapujący kody stacji na nazwy miejscowości
+        provinces (dict): łownik mapujący kody stacji na nazwy wojewódstw
 
     Returns:
         dict: słownik z DataFrame z poprawionymi datami
@@ -267,12 +271,13 @@ def merge_dataframes(dfs, cities):
     new_columns = []
     for col in merged_df.columns:
         if col == "Data":
-            new_columns.append(("Data", ""))  # np. zostaw "Data" jako kolumnę dat
+            new_columns.append(("Data", "", ""))  # np. zostaw "Data" jako kolumnę dat
         else:
             miejscowosc = cities.get(col, "Nieznana")  # default jeśli brak w metadanych
-            new_columns.append((miejscowosc, col))
+            wojewodstwo = provinces.get(col, "Nieznana") # default jeśli brak w metadanych
+            new_columns.append((wojewodstwo,miejscowosc,col))
 
-    merged_df.columns = pd.MultiIndex.from_tuples(new_columns)
+    merged_df.columns = pd.MultiIndex.from_tuples(new_columns,names=["Wojewodstwo", "Miejscowosc", "Stacja"])
 
     # Konwersja kolumn do odpowiednich typów
     cols_to_convert = merged_df.columns[1:]
