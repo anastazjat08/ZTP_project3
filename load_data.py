@@ -274,10 +274,10 @@ def merge_dataframes(dfs, cities,provinces,):
             new_columns.append(("Data", "", ""))  # np. zostaw "Data" jako kolumnę dat
         else:
             miejscowosc = cities.get(col, "Nieznana")  # default jeśli brak w metadanych
-            wojewodstwo = provinces.get(col, "Nieznana") # default jeśli brak w metadanych
+            wojewodstwo = provinces.get(col, "Nieznane") # default jeśli brak w metadanych
             new_columns.append((wojewodstwo,miejscowosc,col))
 
-    merged_df.columns = pd.MultiIndex.from_tuples(new_columns,names=["Wojewodstwo", "Miejscowosc", "Stacja"])
+    merged_df.columns = pd.MultiIndex.from_tuples(new_columns,names=["Wojewodztwo", "Miejscowosc", "Stacja"])
 
     # Konwersja kolumn do odpowiednich typów
     cols_to_convert = merged_df.columns[1:]

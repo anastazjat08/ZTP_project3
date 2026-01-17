@@ -84,7 +84,7 @@ def calculate_days_exceeding_limit_by_province(df, limit=15):
     exceeded = daily_means > limit
 
     # Sprawdzam czy w danym dniu było przekroczenie w województwie
-    exceeded_by_province = (exceeded.groupby(axis=1, level="Wojewodstwo").any())
+    exceeded_by_province = (exceeded.groupby(axis=1, level="Wojewodztwo").any())
 
     # Zliczanie dni w poszczególnych latach
     result = (exceeded_by_province.groupby(exceeded_by_province.index.year).sum())

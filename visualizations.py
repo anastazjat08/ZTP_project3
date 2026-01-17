@@ -68,7 +68,7 @@ def plot_exceeding_days(df, title, x_label = "Stacje pomiarowe"):
     """Rysuje wykres słupkowy porównujący liczbę dni przekroczeń dla wybranych jednostek w różnych latach
     Args:
         df (pd.DataFrame): DataFrame z liczbą dni przekroczeń dla każdej jednostki (kolumna z danymi w df,
-         reprezentujaca stacje, miejscowosc lub wojewódstwo) i roku.
+         reprezentujaca stacje, miejscowosc lub województwo) i roku.
         title (str): Tytuł wykresu.
         x_label (str): Nazwa osi poziomej.
     """
