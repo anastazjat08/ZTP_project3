@@ -71,8 +71,13 @@ def load_metadata():
     
     archive_url = "https://powietrze.gios.gov.pl/pjp/archives"
 
-    r = requests.get(archive_url)
-    r.raise_for_status()
+    try:
+        r = requests.get(archive_url)
+        r.raise_for_status()
+    except Exception as e:
+        print(f"Błąd pobierania strony archiwum: {e}")
+        return None
+
     soup = BeautifulSoup(r.text, "html.parser")
 
     # Linki z 'downloadFile/...'
@@ -89,18 +94,25 @@ def load_metadata():
 
     if not candidates:
         print("Nie znaleziono pliku metadanych!")
-        return pd.DataFrame()
+        return None
 
     text, href = candidates[0]
 
     file_url = "https://powietrze.gios.gov.pl" + href
 
-    r = requests.get(file_url)
-    r.raise_for_status()
+    try:
+        r = requests.get(file_url)
+        r.raise_for_status()
+    except Exception as e:
+        print(f"Błąd pobierania pliku metadanych: {e}")
+        return None
 
-    df = pd.read_excel(BytesIO(r.content), header=0)
-    df = df.rename(columns={'Stary Kod stacji \n(o ile inny od aktualnego)': 'Stary Kod stacji'})
-    
+    try:
+        df = pd.read_excel(BytesIO(r.content), header=0)
+        df = df.rename(columns={'Stary Kod stacji \n(o ile inny od aktualnego)': 'Stary Kod stacji'})
+    except Exception as e:
+        print(f"Błąd odczytu pliku metadanych: {e}")
+        return None
     return df
     
 
