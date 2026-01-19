@@ -1,0 +1,25 @@
+Opis wkładu:
+Anastazja
+- utworzenie repozytorium i umieszczenie w nim rozwiązania Małego Projektu 1
+- zmodyfikowanie Małego Projektu 1 do wersji projektowej
+- poprawienie rozwiązania o sugestie z moodle:
+	-przechowywanie zmian z osobnych lat na liście
+	-łączenie DataFrame za pomocą concat, join="inner"
+	-konwersja typów przed zapisem
+	-groupby na podstawie tymczasowych obiektów
+- Część 7
+- Część 8
+
+Katarzyna
+- Część 2:
+	- poprawienie rozwiązania o sugestie z moodle:
+		- wczytywanie metadanych ze strony GIOS
+		- poprawa pomiarów dokonywanych o północy (oraz zmiana pomiarów z godziny 00:00-00:59 na 23:59 ze względu na przesunięcie pomiarów w 2015)
+		- ograniczenie wypisywania komunikatów testowych
+	- przeanalizowanie danych z godzinnych pomiarów stężeń drobnego pyłu PM2.5 tym razem w latach 2015, 2018, 2021 i 2024
+	- porównanie danych dla Warszawy i Katowic w zadaniu 2 dla lat 2015 i 2024;
+	- zwrócenie uwagi na zmiany adresu pod którymi znajdują się metadane.
+- Część 3
+- Część 4
+- Część 5
+- Część 6
