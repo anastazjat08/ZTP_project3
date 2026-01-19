@@ -21,7 +21,7 @@ Projekt został przygotowany w formie modułów `.py` oraz notebooka `.ipynb`.
 ## Struktura repozytorium
 
 ```
-project/
+ZTP_project3/
 ├── load_data.py             # pobieranie, wczytywanie, czyszczenie i łączenie danych
 ├── calculations.py          # obliczenia i analiza statystyczna
 ├── visualizations.py        # rysowanie wykresów i wizualizacja wyników
@@ -33,7 +33,9 @@ project/
 ├── .github/
 │   └── workflows/
 │       └── tests.yml        # pipeline CI (uruchamianie testów)
-└── README.md                # dokumentacja projektu
+├── README.md                # dokumentacja projektu
+└── opis_wkładu_ZTP_pr3.txt  # opis podziału pracy
+
 ```
 
 ---
@@ -125,4 +127,5 @@ Dokumentacja obejmuje:
 ## Autorzy
 
 Projekt wykonany w ramach realizacji Małego Projektu 3.  
-Wkład zespołu został opisany w notebooku.
+Wkład zespołu został opisany w ramach pliku opis_wkładu_ZTP_pr3.txt
+
