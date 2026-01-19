@@ -22,6 +22,7 @@ def test_calculate_station_monthly_averages():
 
 
 from calculations import calculate_city_monthly_averages
+
 def test_calculate_city_monthly_averages_simple():
     index = pd.MultiIndex.from_tuples([
         (2015, 1),
@@ -31,11 +32,11 @@ def test_calculate_city_monthly_averages_simple():
     ], names=["Rok", "Miesiąc"])
 
     columns = pd.MultiIndex.from_tuples([
-        ("Wrocław", "stacja1"),
-        ("Wrocław", "stacja2"),
-        ("Kraków", "stacja1"),
-        ("Kraków", "stacja2"),
-    ])
+        ("Dolnośląskie","Wrocław", "stacja1"),
+        ("Dolnośląskie","Wrocław", "stacja2"),
+        ("Małopolskie","Kraków", "stacja1"),
+        ("Małopolskie","Kraków", "stacja2"),
+    ],names=["Wojewodztwo", "Miejscowosc", "Stacja"])
 
     df = pd.DataFrame([
         [10, 20, 30, 40],
@@ -53,7 +54,7 @@ def test_calculate_city_monthly_averages_simple():
             [ (40+80)/2, (120+160)/2 ],
         ],
         index=index,
-        columns=["Wrocław", "Kraków"]
+        columns=pd.Index(["Wrocław","Kraków"],name="Miejscowosc")
     )
 
     pd.testing.assert_frame_equal(result, expected, check_like=True)#check_like=True ignoruje kolejność
@@ -110,4 +111,74 @@ def test_get_3_lowest_highest():
 
     # sprawdzamy, że kształt to 6 kolumn
     assert result.shape[1] == 6
+
+from calculations import calculate_daily_station_averages
+def test_calculate_daily_station_averages():
+    df = pd.DataFrame({
+        ("Data", ""): pd.to_datetime([
+            "2020-01-01 10:00",
+            "2020-01-01 18:00",
+            "2020-01-02 12:00",
+            "2020-01-02 20:00",
+        ]),
+        ("Wrocław", "DsWrocAlWisn"): [10, 20, 30, 50],
+        ("Łódź", "LdLodzCzerni"): [5, 15, 25, 35],
+    })
+
+    df.columns = pd.MultiIndex.from_tuples(df.columns)
+
+    result = calculate_daily_station_averages(df)
+
+    # sprawdzam indeks
+    assert pd.Timestamp("2020-01-01") in result.index
+    assert pd.Timestamp("2020-01-02") in result.index
+
+    # sprawdzam wartości średnie
+    assert result.loc["2020-01-01", ("Wrocław", "DsWrocAlWisn")] == 15
+    assert result.loc["2020-01-01", ("Łódź", "LdLodzCzerni")] == 10
+
+    assert result.loc["2020-01-02", ("Wrocław", "DsWrocAlWisn")] == 40
+    assert result.loc["2020-01-02", ("Łódź", "LdLodzCzerni")] == 30
+
+from calculations import calculate_days_exceeding_limit_by_province
+def test_calculate_days_exceeding_limit_by_province():
+    # Przygotowanie danych
+    dates = pd.to_datetime([
+        "2020-01-01 10:00",
+        "2020-01-02 10:00",
+        "2020-01-03 10:00",
+    ])
+
+    columns = pd.MultiIndex.from_tuples(
+        [
+            ("Mazowieckie", "Warszawa", "A"),
+            ("Mazowieckie", "Radom", "B"),
+            ("Małopolskie", "Kraków", "C"),
+            ("Małopolskie", "Tarnów", "D"),
+        ],
+        names=["Wojewodztwo", "Miejscowosc", "Stacja"],
+    )
+
+    data = [
+        [10, 12, 20, 10],  # dzień 1
+        [16, 14, 14, 13],  # dzień 2
+        [8, 9, 18, 17],    # dzień 3
+    ]
+
+    df = pd.DataFrame(data, index=dates, columns=columns)
+    df["Data"] = df.index
+
+    # Wywołanie funkcji
+    result = calculate_days_exceeding_limit_by_province(df, limit=15)
+
+    # Oczekiwany wynik
+    expected = pd.DataFrame(
+        [[1,2]],
+        index=pd.Index([2020],name = "Data",dtype="int32"),
+        columns = pd.Index([ "Mazowieckie","Małopolskie"], name="Wojewodztwo"),
+    )
+
+    # Sprawdzenie
+    pd.testing.assert_frame_equal(result, expected,check_like=True)#check_like = True ignoruje kolejność
+
 

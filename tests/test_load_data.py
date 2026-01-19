@@ -32,14 +32,16 @@ def test_get_old_station_codes():
     data = {
         "Kod stacji": ["A", "B", "C"],
         "Stary Kod stacji": ["X", "Y, Z", None],
-        "Miejscowość": ["Miasto1", "Miasto2", "Miasto3"]
+        "Miejscowość": ["Miasto1", "Miasto2", "Miasto3"],
+        "Województwo":["Województwo1","Województwo2","Województwo3"]
     }
     df = pd.DataFrame(data)
 
-    old_codes, cities = get_old_station_codes(df)
+    old_codes, cities, provinces = get_old_station_codes(df)
 
     assert old_codes == {"X": "A", "Y": "B", "Z": "B"}
     assert cities == {"A": "Miasto1", "B": "Miasto2", "C": "Miasto3"}
+    assert provinces == {"A":"Województwo1","B":"Województwo2","C":"Województwo3"}
 
 
 from load_data import clean_pm25_data
@@ -166,26 +168,27 @@ def test_merge_dataframes_basic():
         2020: pd.DataFrame({"Data": pd.to_datetime(["2020-01-01 00:00:00", "2020-01-02 00:00:00"]), "X1": [12.0, 13.0], "X2": [22.0, 23.0],}) }
 
     cities = {"X1": "Warszawa", "X3": "Kraków"}
-    merged = merge_dataframes(dfs, cities)
+    provinces = {"X1":"Mazowieckie","X3":"Małopolskie"}
+    merged = merge_dataframes(dfs, cities,provinces)
 
     #concat po wierszach - 4 rekordy
     assert len(merged) == 4
 
     #MultiIndex kolumn(X3 wypada)
     expected_cols = pd.MultiIndex.from_tuples([
-        ("Data", ""),
-        ("Warszawa", "X1"),
-        ("Nieznana", "X2")
+        ("Data", "",""),
+        ("Mazowieckie","Warszawa", "X1"),
+        ("Nieznane","Nieznana", "X2")
     ])
 
     assert list(merged.columns) == list(expected_cols)
 
     #Konwersja do numeric
-    assert merged[("Warszawa", "X1")].dtype == float
-    assert merged[("Nieznana", "X2")].dtype == float
+    assert merged[("Mazowieckie","Warszawa", "X1")].dtype == float
+    assert merged[("Nieznane","Nieznana", "X2")].dtype == float
 
     #Kolumna Data pozostała datetime
-    assert pd.api.types.is_datetime64_any_dtype(merged[("Data", "")])
+    assert pd.api.types.is_datetime64_any_dtype(merged[("Data", "","")])
 
 
 from load_data import get_cities_years
